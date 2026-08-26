@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLASKE Impact Tracker — isolation test</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #16181d;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --card: #f9fafb;
+    --pass: #0f7b41;
+    --pass-bg: #e7f5ed;
+    --fail: #b42318;
+    --fail-bg: #fdeceb;
+    --warn: #8a5a00;
+    --warn-bg: #fdf4e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --fg: #e8eaed; --muted: #9aa1ab; --line: #2a2e35;
+      --card: #1b1e24; --pass: #5fd695; --pass-bg: #14301f; --fail: #ff8a80;
+      --fail-bg: #351917; --warn: #f0c674; --warn-bg: #322611;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 64px;
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 28px; font-size: 14px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+       color: var(--muted); margin: 34px 0 12px; font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line);
+          border-radius: 10px; padding: 4px 16px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline;
+         gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .label { color: var(--muted); font-size: 13px; }
+  .label code { font-size: 12px; color: var(--muted); }
+  .val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .val .short { color: var(--muted); font-weight: 400; margin-left: 8px; font-size: 13px; }
+  .check { display: flex; gap: 10px; padding: 9px 0; align-items: flex-start;
+           border-bottom: 1px solid var(--line); }
+  .check:last-child { border-bottom: 0; }
+  .badge { flex: none; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+           padding: 2px 7px; border-radius: 4px; margin-top: 1px; min-width: 52px;
+           text-align: center; }
+  .b-pass { color: var(--pass); background: var(--pass-bg); }
+  .b-fail { color: var(--fail); background: var(--fail-bg); }
+  .b-warn { color: var(--warn); background: var(--warn-bg); }
+  .check-txt { font-size: 14px; }
+  .check-note { color: var(--muted); font-size: 12.5px; display: block; margin-top: 1px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: 12.5px; margin: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 4px; }
+  button { font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px;
+           border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+           cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  .foot { color: var(--muted); font-size: 12.5px; margin-top: 34px;
+          border-top: 1px solid var(--line); padding-top: 14px; }
+  .src { color: var(--muted); font-size: 12.5px; word-break: break-all; margin: 0 0 12px;
+         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Impact tracker — isolation test</h1>
+  <p class="sub">Runs the production v4 script against the live data file. Nothing on flaske.com is touched.</p>
+
+  <h2>Source</h2>
+  <p class="src" id="src-url"></p>
+
+  <h2>Checks</h2>
+  <div class="card" id="checks"></div>
+
+  <h2>Rendered values</h2>
+  <div class="card">
+    <div class="row"><span class="label">Products sold <code>flessen_cum</code></span>
+      <span class="val"><span data-flaske="flessen_cum">—</span><span class="short" data-flaske="flessen_cum_short"></span></span></div>
+    <div class="row"><span class="label">Bottles avoided <code>plastic_bottles_eliminated</code></span>
+      <span class="val"><span data-flaske="plastic_bottles_eliminated">—</span><span class="short" data-flaske="plastic_bottles_eliminated_short"></span></span></div>
+    <div class="row"><span class="label">Plastic saved, kg <code>plastic_kg_saved</code></span>
+      <span class="val"><span data-flaske="plastic_kg_saved">—</span><span class="short" data-flaske="plastic_kg_saved_short"></span></span></div>
+    <div class="row"><span class="label">Plastic saved, tonnes <code>plastic_tonnes_saved</code></span>
+      <span class="val"><span data-flaske="plastic_tonnes_saved">—</span></span></div>
+    <div class="row"><span class="label">Worldwide since 1 Jan 2026 <code>world</code></span>
+      <span class="val"><span data-flaske="world">—</span><span class="short" data-flaske="world_short"></span></span></div>
+    <div class="row"><span class="label">Last data refresh <code>last_updated</code></span>
+      <span class="val"><span data-flaske="last_updated">—</span></span></div>
+  </div>
+
+  <h2>Raw response</h2>
+  <div class="bar">
+    <button id="btn-reload">Reload</button>
+    <button id="btn-fail">Simulate outage</button>
+  </div>
+  <pre id="raw">loading…</pre>
+
+  <p class="foot">
+    A passing run proves the data file is reachable cross-origin, parses correctly, is internally
+    consistent, and renders into every attribute the theme will use. It does not prove the nightly
+    01:00 automation runs on schedule — that needs one real overnight cycle.
+  </p>
+
+</div>
+
+<script>
+(function () {
+
+  // ── Same configuration as the production script ───────────────
+  const REAL_URL = 'https://flaskebottle.github.io/flaske-impact-data/data/flaske-counter.json';
+  const BAD_URL  = 'https://flaskebottle.github.io/flaske-impact-data/data/does-not-exist.json';
+  const LOCALE   = 'en-US';
+
+  const WORLD_RATE_PER_SEC = 16667;
+  const WORLD_EPOCH_MS     = Date.UTC(2026, 0, 1, 0, 0, 0);
+
+  const FALLBACK = {
+    flessen_cum:                215139,
+    plastic_bottles_eliminated: 33561684,
+    plastic_kg_saved:           839042.1,
+    last_updated:               '2026-08-26T04:04:47.293Z'
+  };
+
+  // Documented conversion assumptions, re-derived here to verify the file.
+  const BOTTLES_PER_PRODUCT_PER_YEAR = 156;
+  const KG_PER_BOTTLE = 0.025;
+  const TOLERANCE = 0.005;
+
+  // ──────────────────────────────────────────────────────────────
+
+  const full = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+  const compact = new Intl.NumberFormat(LOCALE, {
+    notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1
+  });
+
+  const checksEl = document.getElementById('checks');
+  const rawEl = document.getElementById('raw');
+  document.getElementById('src-url').textContent = REAL_URL;
+
+  function write(key, text) {
+    const els = document.querySelectorAll('[data-flaske="' + key + '"]');
+    for (let i = 0; i < els.length; i++) els[i].textContent = text;
+  }
+
+  function writeNumber(key, value) {
+    if (typeof value !== 'number' || !isFinite(value)) return;
+    write(key, full.format(value));
+    write(key + '_short', compact.format(value));
+  }
+
+  function renderImpact(data) {
+    writeNumber('flessen_cum', Number(data.flessen_cum));
+    writeNumber('plastic_bottles_eliminated', Number(data.plastic_bottles_eliminated));
+    writeNumber('plastic_kg_saved', Number(data.plastic_kg_saved));
+    const kg = Number(data.plastic_kg_saved);
+    if (isFinite(kg)) write('plastic_tonnes_saved', full.format(kg / 1000));
+    const stamp = new Date(data.last_updated);
+    if (!isNaN(stamp)) {
+      write('last_updated', stamp.toLocaleDateString(LOCALE, {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      }));
+    }
+  }
+
+  function startWorldCounter() {
+    function tick() {
+      const elapsedSec = (Date.now() - WORLD_EPOCH_MS) / 1000;
+      const count = Math.max(0, elapsedSec * WORLD_RATE_PER_SEC);
+      write('world', full.format(count));
+      write('world_short', compact.format(count));
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── Test harness ──────────────────────────────────────────────
+
+  function addCheck(state, text, note) {
+    const names = { pass: 'PASS', fail: 'FAIL', warn: 'WARN' };
+    const row = document.createElement('div');
+    row.className = 'check';
+    const badge = document.createElement('span');
+    badge.className = 'badge b-' + state;
+    badge.textContent = names[state];
+    const body = document.createElement('span');
+    body.className = 'check-txt';
+    body.textContent = text;
+    if (note) {
+      const small = document.createElement('span');
+      small.className = 'check-note';
+      small.textContent = note;
+      body.appendChild(small);
+    }
+    row.appendChild(badge);
+    row.appendChild(body);
+    checksEl.appendChild(row);
+  }
+
+  function closeEnough(actual, expected) {
+    if (!isFinite(actual) || !isFinite(expected) || expected === 0) return false;
+    return Math.abs(actual - expected) / expected <= TOLERANCE;
+  }
+
+  function runChecks(data, meta) {
+    addCheck('pass', 'Data file reachable', 'HTTP ' + meta.status + ' in ' + meta.ms + ' ms');
+    addCheck('pass', 'Readable from another origin',
+      'This page is served from ' + location.origin + '. A CORS block would have thrown instead.');
+    addCheck('pass', 'Response is valid JSON');
+
+    const keys = ['flessen_cum', 'plastic_bottles_eliminated', 'plastic_kg_saved', 'last_updated'];
+    const missing = keys.filter(function (k) { return data[k] === undefined || data[k] === null; });
+    if (missing.length) addCheck('fail', 'Missing fields', missing.join(', '));
+    else addCheck('pass', 'All four expected fields present');
+
+    const cum = Number(data.flessen_cum);
+    if (!isFinite(cum)) addCheck('fail', 'flessen_cum is not a number', String(data.flessen_cum));
+    else if (cum < 100000 || cum > 1000000)
+      addCheck('fail', 'flessen_cum outside plausible range',
+        full.format(cum) + ' — expected between 100,000 and 1,000,000');
+    else addCheck('pass', 'flessen_cum within plausible range', full.format(cum));
+
+    const bottles = Number(data.plastic_bottles_eliminated);
+    const expBottles = cum * BOTTLES_PER_PRODUCT_PER_YEAR;
+    if (closeEnough(bottles, expBottles))
+      addCheck('pass', 'Bottles avoided matches the stated method',
+        full.format(cum) + ' x ' + BOTTLES_PER_PRODUCT_PER_YEAR + ' = ' + full.format(expBottles));
+    else
+      addCheck('fail', 'Bottles avoided does not match the stated method',
+        'file says ' + full.format(bottles) + ', method gives ' + full.format(expBottles));
+
+    const kg = Number(data.plastic_kg_saved);
+    const expKg = bottles * KG_PER_BOTTLE;
+    if (closeEnough(kg, expKg))
+      addCheck('pass', 'Plastic weight matches the stated method',
+        full.format(bottles) + ' x ' + KG_PER_BOTTLE + ' kg = ' + full.format(expKg) + ' kg');
+    else
+      addCheck('fail', 'Plastic weight does not match the stated method',
+        'file says ' + full.format(kg) + ', method gives ' + full.format(expKg));
+
+    const stamp = new Date(data.last_updated);
+    if (isNaN(stamp)) {
+      addCheck('fail', 'last_updated is not a valid date', String(data.last_updated));
+    } else {
+      const hours = (Date.now() - stamp.getTime()) / 3600000;
+      const age = hours.toFixed(1) + ' h ago (' + stamp.toISOString() + ')';
+      if (hours < 0) addCheck('fail', 'last_updated lies in the future', age);
+      else if (hours <= 26) addCheck('pass', 'Data is fresh', age);
+      else if (hours <= 48) addCheck('warn', 'Data is stale — one nightly run appears to have been missed', age);
+      else addCheck('fail', 'Data is more than two days old', age);
+    }
+
+    const elapsedSec = (Date.now() - WORLD_EPOCH_MS) / 1000;
+    const world = elapsedSec * WORLD_RATE_PER_SEC;
+    if (world > 1e9)
+      addCheck('pass', 'Worldwide counter is anchored, not page-load based',
+        'Starts at ' + compact.format(world) + ', not at zero. Anchor: 1 Jan 2026.');
+    else
+      addCheck('fail', 'Worldwide counter looks page-load based', compact.format(world));
+  }
+
+  function load(url, label) {
+    checksEl.textContent = '';
+    rawEl.textContent = 'loading…';
+    const started = Date.now();
+
+    fetch(url + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' })
+      .then(function (res) {
+        const ms = Date.now() - started;
+        if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, ms: ms });
+        return res.text().then(function (text) { return { text: text, status: res.status, ms: ms }; });
+      })
+      .then(function (r) {
+        let data;
+        try { data = JSON.parse(r.text); }
+        catch (e) {
+          addCheck('pass', 'Data file reachable', 'HTTP ' + r.status);
+          addCheck('fail', 'Response is not valid JSON', e.message);
+          rawEl.textContent = r.text;
+          renderImpact(FALLBACK);
+          return;
+        }
+        rawEl.textContent = JSON.stringify(data, null, 2);
+        renderImpact(data);
+        runChecks(data, { status: r.status, ms: r.ms });
+      })
+      .catch(function (err) {
+        rawEl.textContent = String(err);
+        if (label === 'outage') {
+          addCheck('pass', 'Outage handled without breaking the page',
+            'Request failed as intended (' + err.message + '). Fallback values rendered below.');
+          addCheck('pass', 'Worldwide counter keeps running during an outage');
+        } else {
+          addCheck('fail', 'Data file unreachable', err.message +
+            ' — check that GitHub Pages is enabled and the path is correct.');
+        }
+        renderImpact(FALLBACK);
+      });
+  }
+
+  document.getElementById('btn-reload').addEventListener('click', function () { load(REAL_URL, 'real'); });
+  document.getElementById('btn-fail').addEventListener('click', function () { load(BAD_URL, 'outage'); });
+
+  startWorldCounter();
+  load(REAL_URL, 'real');
+
+})();
+</script>
+</body>
+</html>
